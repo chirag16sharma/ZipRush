@@ -55,14 +55,15 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 .puzzle-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .ziplabel{background:var(--accent);color:#fff;padding:7px 16px;border-radius:999px;font-weight:950}
 .instructions{color:var(--muted);font-size:14px}
-.board-wrap{position:relative;max-width:560px;margin:22px auto}.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;touch-action:none}.route{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible;shape-rendering:geometricPrecision}.route path{vector-effect:non-scaling-stroke}.route .route-tip{transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 1px 1px #c2410c40)}
-.cell{position:relative;z-index:1;aspect-ratio:1;min-width:0;min-height:44px;border:0;border-radius:50%;background:radial-gradient(circle,#ffc48a 2.5px,transparent 3.5px) center/100% 100% no-repeat;color:var(--text);font-size:clamp(14px,2vw,22px);font-weight:800;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+.board-wrap{position:relative;max-width:560px;margin:22px auto;transition:transform .12s ease}.board-wrap.invalid-shake{animation:boardShake .3s ease}.board{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;touch-action:none}.route,.barriers{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;shape-rendering:geometricPrecision}.route{z-index:0}.barriers{z-index:1}.route path{vector-effect:non-scaling-stroke}.route .route-tip{transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 1px 1px #c2410c40)}.route .flow-dot{fill:#fff;stroke:#ff7a00;stroke-width:.12;vector-effect:non-scaling-stroke}.route .invalid-segment{stroke:#e53e3e;stroke-width:.62;stroke-linecap:round;vector-effect:non-scaling-stroke;animation:invalidSegment .3s ease-out forwards}.barriers line{stroke:var(--wall);stroke-width:.24;stroke-linecap:butt;vector-effect:non-scaling-stroke}
+.cell{position:relative;z-index:2;aspect-ratio:1;min-width:0;min-height:44px;border:1px solid #e0e0e0;border-radius:0;background:radial-gradient(circle,#ffc48a 2.5px,transparent 3.5px) center/100% 100% no-repeat;color:var(--text);font-size:clamp(14px,2vw,22px);font-weight:800;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 .cell:hover:not(.visited){transform:scale(1.08)}
 .cell.visited{background:none;color:var(--visited-text)}
 .cell.next{box-shadow:0 0 0 3px var(--accent-dark)}
 .cell.cp{background:#fff;box-shadow:inset 0 0 0 3px var(--accent);color:var(--accent-dark)}
 .cell.cp.visited{background:var(--accent);box-shadow:none;color:#fff}
 .board-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid #fed7aa;border-radius:12px;color:var(--muted);font-size:13px}
+.board-meta.invalid{border-color:#e53e3e;color:#b42318}
 .actions{display:flex;gap:10px;margin-top:16px}
 .actions>.btn{flex:1}
 .rules{color:var(--muted);font-size:14px;padding-left:20px}
@@ -77,26 +78,28 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 @keyframes cellBounce{0%,100%{transform:scale(1)}25%{transform:scale(1.35)}50%{transform:scale(.85)}75%{transform:scale(1.15)}}
 .cell.connect-pulse{animation:connectPulse .42s cubic-bezier(.22,.8,.28,1)}
 @keyframes connectPulse{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes invalidSegment{0%{opacity:1}100%{opacity:0}}
+@keyframes boardShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media(max-width:950px){.game-layout{grid-template-columns:1fr 2fr}.game-layout .howto{grid-column:1/-1}.start-layout{grid-template-columns:1fr}}
 @media(max-width:650px){.wrap{padding:10px}.top{align-items:flex-start;flex-direction:column}.topright{width:100%;justify-content:space-between}.game-layout{grid-template-columns:1fr}.game-layout .progress,.game-layout .board-panel,.game-layout .howto{grid-column:1}.game-layout .board-panel{grid-row:1}.game-layout .progress{grid-row:2}.game-layout .howto{grid-row:3}.board-wrap{margin:16px auto;max-width:100%}.board{gap:0}.cell{font-size:clamp(13px,4vw,19px);min-height:0}.panel{padding:14px}.brand{letter-spacing:-1px}.actions{flex-direction:column}.actions .btn{width:100%;padding:13px}.topright{gap:8px}.timerbox,.teamchip{padding:10px 12px}.timer{font-size:25px}.teamchip{min-width:0;max-width:45%;overflow-wrap:anywhere}}
 </style></head><body><div class="wrap">
 <header class="top"><div><div class="brand">ZIP <span>RUSH</span></div><div class="tag">THE 5-PUZZLE CHALLENGE · Think fast. Beat the clock.</div></div><div class="topright"><div class="timerbox"><small>TIME ELAPSED</small><div class="timer" id="timer">00:00.00</div></div><div class="teamchip"><strong id="headerTeam">No team yet</strong><small id="headerStatus">Ready to play</small></div></div></header>
 <main>
 <section id="startScreen" class="screen active"><div class="start-layout"><div class="panel hero"><div class="eyebrow">One team. Five puzzles. One winner.</div><h1>READY.<br><em>SET.</em><br>ZIP!</h1><p>Trace five challenging paths. Most cells are blank: plan your route between numbered checkpoints, fill every cell exactly once, and beat the clock.</p><div class="pills"><span class="pill">5 puzzles</span><span class="pill">6 × 6 and 7 × 7 grids</span><span class="pill">Some walls</span><span class="pill">Hints are counted</span><span class="pill">Swipe to play</span></div><label class="field" for="teamName">ENTER TEAM NAME</label><input id="teamName" maxlength="32" placeholder="e.g. Code Crushers" autocomplete="off"><button id="startBtn" class="btn primary">START CHALLENGE →</button><div class="subtle">The timer begins at start and stops after puzzle five. On a phone, swipe across the cells to draw your path.</div></div><div class="panel side"><div class="eyebrow">Before you begin</div><h2>How to play</h2><div class="steps"><div class="step"><div class="num">01</div><div><strong>Start at 1</strong><p>Begin at checkpoint 1, then drag through adjacent cells.</p></div></div><div class="step"><div class="num">02</div><div><strong>Connect in sequence</strong><p>Swipe across cells to draw a continuous path.</p></div></div><div class="step"><div class="num">03</div><div><strong>Don't skip or repeat</strong><p>Diagonal moves, revisiting cells, and crossing walls are not allowed.</p></div></div><div class="step"><div class="num">04</div><div><strong>Finish all five</strong><p>Complete each grid to advance. Your total time decides the result.</p></div></div></div></div></div></section>
-<section id="gameScreen" class="screen"><div class="game-layout"><aside class="panel progress"><div class="eyebrow">Your progress</div><h2 id="progressCount">1 / 5</h2><div class="progress-list" id="progressList"></div><div class="notice">Keep moving. The timer continues between puzzles.</div><button id="quitBtn" class="btn secondary" style="width:100%;margin-top:18px">End attempt</button></aside><section class="panel board-panel"><div class="puzzle-head"><div><span class="ziplabel" id="zipLabel">ZIP 1</span> <span style="color:var(--muted);margin-left:8px" id="zipOf">of 5</span></div><span class="pill" id="gridPill">6 × 6 GRID</span></div><h2 style="margin:18px 0 4px">Connect the numbers in order.</h2><div class="instructions">Swipe or drag from checkpoint 1 to draw your route. Visit every cell once, hit checkpoints in order, never cross a wall, and move only up, down, left, or right.</div><div class="board-wrap"><svg class="route" id="route" viewBox="0 0 6 6" aria-hidden="true"></svg><div class="board" id="board" aria-label="Puzzle grid"></div></div><div class="board-meta"><span>Cells filled: <strong id="currentNumber">0 / 36</strong></span><span>Hints used: <strong id="hintCount">0</strong></span><span id="feedback" aria-live="polite">Swipe from checkpoint 1 to start.</span></div><div class="actions" style="margin-top:10px"><button class="btn secondary" id="undoBtn">Undo last cell</button><button class="btn secondary" id="hintBtn">Hint</button></div><div class="actions"><button class="btn secondary" id="resetPuzzleBtn">Restart puzzle</button><button class="btn primary" id="nextBtn" style="width:auto;margin:0" disabled>Finish puzzle</button></div></section><aside class="panel howto"><div class="eyebrow">Rules</div><h2>Play fair</h2><ol class="rules"><li>Trace one continuous path that visits every cell in the grid.</li><li>Hit the numbered checkpoints in order, starting at 1 and finishing on the highest number.</li><li>Move up, down, left, or right only, and never cross a wall.</li><li>Each cell can be visited only once.</li><li>A hint adds the next correct cell and is counted against your result.</li></ol><div class="notice">Tip: look for the next number before you move. A wrong move won't count.</div></aside></div></section>
+<section id="gameScreen" class="screen"><div class="game-layout"><aside class="panel progress"><div class="eyebrow">Your progress</div><h2 id="progressCount">1 / 5</h2><div class="progress-list" id="progressList"></div><div class="notice">Keep moving. The timer continues between puzzles.</div><button id="quitBtn" class="btn secondary" style="width:100%;margin-top:18px">End attempt</button></aside><section class="panel board-panel"><div class="puzzle-head"><div><span class="ziplabel" id="zipLabel">ZIP 1</span> <span style="color:var(--muted);margin-left:8px" id="zipOf">of 5</span></div><span class="pill" id="gridPill">6 × 6 GRID</span></div><h2 style="margin:18px 0 4px">Connect the numbers in order.</h2><div class="instructions">Swipe across cells to draw. Tap the active end to undo one cell, or swipe backward along the route to erase.</div><div class="board-meta" id="boardMeta"><span>Cells filled: <strong id="currentNumber">0 / 36</strong></span><span>Hints used: <strong id="hintCount">0</strong></span><span>Flow: 1 → end</span></div><div class="board-wrap" id="boardWrap"><svg class="route" id="route" viewBox="0 0 6 6" aria-hidden="true"></svg><svg class="barriers" id="barriers" viewBox="0 0 6 6" aria-hidden="true"></svg><div class="board" id="board" aria-label="Puzzle grid"></div></div><div class="board-meta"><span id="feedback" aria-live="polite">Swipe from checkpoint 1 to start.</span></div><div class="actions" style="margin-top:10px"><button class="btn secondary" id="undoBtn">Undo last cell</button><button class="btn secondary" id="hintBtn">Hint</button></div><div class="actions"><button class="btn secondary" id="resetPuzzleBtn">Restart puzzle</button><button class="btn primary" id="nextBtn" style="width:auto;margin:0" disabled>Finish puzzle</button></div></section><aside class="panel howto"><div class="eyebrow">Rules</div><h2>Play fair</h2><ol class="rules"><li>Trace one continuous path that visits every cell in the grid.</li><li>Hit the numbered checkpoints in order, starting at 1 and finishing on the highest number.</li><li>Move up, down, left, or right only, and never cross a wall.</li><li>Each cell can be visited only once.</li><li>A hint adds the next correct cell and is counted against your result.</li></ol><div class="notice">Tip: tap the active end to undo one cell. Swipe backward to erase several cells.</div></aside></div></section>
 <section id="resultScreen" class="screen"><div class="panel result"><div class="eyebrow">Challenge complete</div><h1 id="resultTitle">ZIP RUSH CHAMPION</h1><p style="color:var(--muted)">All five puzzles completed by <strong id="resultTeam"></strong>.</p><div class="result-time" id="finalTime">00:00.00</div><p style="color:var(--muted)">FINAL TIME</p><div class="pills" style="justify-content:center"><span class="pill">5 / 5 puzzles completed</span><span class="pill">Hints used: <strong id="resultHints">0</strong></span><span class="pill">Result ready to record</span></div><button class="btn primary" id="printBtn" style="max-width:320px">PRINT RESULT</button><button class="btn secondary" id="newTeamBtn" style="max-width:320px;margin:10px">RUN ANOTHER TEAM</button><div class="subtle">This prototype doesn't store results after the page is closed. Record the time and hints for your event leaderboard.</div></div></section>
 </main><div class="footer">ZIP RUSH · CLUB CHALLENGE · Local browser edition</div></div>
 <script>
 (()=>{const $=id=>document.getElementById(id);
-let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],hints=[],dragging=false;
+let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],hints=[],dragging=false,erasing=false;
 let routeFrame=0,routeMotion={from:null,to:null,progress:1},pointerSample=null,pointerPrediction=null;
 let R=6,C=6,N=36,MAX=1,cpMap=new Map(),wallSet=new Set(),curWalls=[],curNums=[];
 // Each puzzle: grid size, checkpoints as [row,col] in order (1 to last), and walls between two neighbouring cells.
 const puzzles=[
 {rows:6,cols:6,nums:[[1,4],[0,5],[5,0],[4,1],[3,1],[1,3],[1,1],[2,2],[3,3],[4,2],[4,4],[2,4]],walls:[]},
-{rows:6,cols:6,nums:[[3,4],[2,5],[4,4],[4,0],[3,0],[2,1],[1,5],[1,1]],walls:[[[0,1],[1,1]],[[1,1],[2,1]],[[2,1],[3,1]],[[3,1],[4,1]],[[4,1],[5,1]],[[0,4],[1,4]],[[1,4],[2,4]],[[2,4],[3,4]],[[3,4],[4,4]],[[4,4],[5,4]]]},
+{rows:6,cols:6,nums:[[3,4],[2,5],[4,4],[4,0],[3,0],[2,1],[1,5],[1,1]],walls:[]},
 {rows:6,cols:6,nums:[[0,3],[2,5],[3,5],[5,3],[4,4],[4,1],[5,2],[3,0],[2,0],[0,2],[1,4],[1,1]],walls:[]},
-{rows:7,cols:7,nums:[[4,4],[5,3],[5,5],[1,1],[6,4],[1,3],[0,2],[2,2]],walls:[[[0,5],[1,5]],[[1,5],[2,5]],[[2,4],[3,4]],[[3,2],[4,2]],[[4,1],[5,1]],[[5,1],[6,1]]]},
+{rows:7,cols:7,nums:[[4,4],[5,3],[5,5],[1,1],[6,4],[1,3],[0,2],[2,2]],walls:[]},
 {rows:6,cols:6,nums:[[4,3],[3,4],[3,5],[5,4],[5,3],[3,1],[4,2],[3,2],[2,3],[2,1],[1,2],[1,3],[2,4],[0,2],[0,1],[2,0]],walls:[]}
 ];
 const idx=rc=>rc[0]*C+rc[1];
@@ -132,13 +135,24 @@ function renderBoard(){
   if(path.length&&path[path.length-1]===i)b.classList.add('next');
   if(n)b.classList.add('cp');
   if(n===MAX)b.classList.add('goal');
-  b.addEventListener('pointerdown',e=>{dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);visit(i);e.preventDefault()});
-  b.addEventListener('pointerenter',e=>{if(dragging&&e.buttons)visit(i)});
-  b.addEventListener('pointerup',()=>dragging=false);
+  b.addEventListener('pointerdown',e=>{
+   if(path.length&&path[path.length-1]===i){undoStep();e.preventDefault();return}
+   erasing=path.includes(i);dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);visit(i);e.preventDefault()
+  });
+  b.addEventListener('pointerenter',e=>{if(dragging&&e.buttons){if(path.indexOf(i)<path.length-1)erasing=true;visit(i)}});
+  b.addEventListener('pointerup',()=>{dragging=false;erasing=false});
   board.appendChild(b)
  }
- drawRoute();const cells=[...board.children];const bar='4px solid var(--wall)';
- for(const [a,b] of curWalls){const ia=idx(a),ib=idx(b);if(ib===ia+C){cells[ia].style.borderBottom=bar;cells[ib].style.borderTop=bar}else{cells[ia].style.borderRight=bar;cells[ib].style.borderLeft=bar}}
+ drawBarriers();drawRoute()
+}
+function drawBarriers(){
+ const svg=$('barriers');svg.setAttribute('viewBox','0 0 '+C+' '+R);
+ svg.innerHTML=curWalls.map(([a,b])=>{
+  const ia=idx(a),ib=idx(b),ar=Math.floor(ia/C),ac=ia%C,br=Math.floor(ib/C),bc=ib%C;
+  if(ar===br)return '<line x1="'+(Math.min(ac,bc)+1)+'" y1="'+(ar+.16)+'" x2="'+(Math.min(ac,bc)+1)+'" y2="'+(ar+.84)+'"/>';
+  const row=Math.min(ar,br);
+  return '<line x1="'+(ac+.16)+'" y1="'+(row+1)+'" x2="'+(ac+.84)+'" y2="'+(row+1)+'"/>';
+ }).join('')
 }
 // Draw one smooth line through the centre of every cell in the path.
 function drawRoute(){
@@ -158,7 +172,7 @@ function drawRoute(){
  }
  if(p.length>1)d+=' L '+f(p[p.length-1]);
  const tip=dragging&&pointerPrediction?pointerPrediction:p[p.length-1],stretch=routeMotion.progress<1?1.12:1;
- svg.innerHTML='<path d="'+d+'" fill="none" stroke="#ff7a00" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" cx="'+tip[0]+'" cy="'+tip[1]+'" r="'+(.21*stretch)+'" fill="#ff7a00"/>';
+ const flowId='flowPath';svg.innerHTML='<path id="'+flowId+'" d="'+d+'" fill="none" stroke="#ff7a00" stroke-width=".68" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" cx="'+tip[0]+'" cy="'+tip[1]+'" r="'+(.25*stretch)+'" fill="#ff7a00"/><circle class="flow-dot" r=".11"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#'+flowId+'"/></animateMotion></circle>';
  if(routeMotion.progress<1){routeMotion.progress=Math.min(1,routeMotion.progress+.12);routeFrame=requestAnimationFrame(drawRoute)}
 }
 function animateRoute(from,to){routeMotion={from,to,progress:0};cancelAnimationFrame(routeFrame);routeFrame=requestAnimationFrame(drawRoute)}
@@ -189,16 +203,30 @@ function pulseCheckpoint(i){
 }
 function nextCheckpoint(){let max=0;path.forEach(i=>{if(cpMap.has(i))max=Math.max(max,cpMap.get(i))});return max+1}
 function isComplete(){return path.length===N&&cpMap.get(path[path.length-1])===MAX}
+function invalidMove(message,from,to){
+ $('feedback').textContent=message;
+ $('boardMeta').classList.add('invalid');$('boardWrap').classList.remove('invalid-shake');void $('boardWrap').offsetWidth;$('boardWrap').classList.add('invalid-shake');
+ if(from!==undefined&&to!==undefined){
+  const a=cellCentre(from),b=cellCentre(to),svg=$('route');
+  svg.insertAdjacentHTML('beforeend','<line class="invalid-segment" x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/>');
+ }
+ if(navigator.vibrate)navigator.vibrate(25);
+ setTimeout(()=>$('boardMeta').classList.remove('invalid'),300)
+}
+function undoStep(){
+ if(!path.length)return;
+ path.pop();routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent=path.length?'Undo: continue from the active end.':'Start at checkpoint 1.'
+}
 function visit(i){
  if(path.length&&path[path.length-1]===i)return;
- if(path.includes(i)){if(path.length>1&&path[path.length-2]===i){path.pop();updateBoard();return}$('feedback').textContent='That cell is already in your path. Undo to backtrack.';return}
- if(!path.length){if(cpMap.get(i)!==1){$('feedback').textContent='Start at checkpoint 1.';return}path.push(i)}
+ if(path.includes(i)){if(erasing){const position=path.indexOf(i);path=path.slice(0,position+1);routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent='Path shortened. Continue from the active end.';return}invalidMove('That cell is already in your path.',path[path.length-1],i);return}
+ if(!path.length){if(cpMap.get(i)!==1){invalidMove('Start at checkpoint 1.');return}path.push(i)}
  else{
   const prev=path[path.length-1];
-  if(!adjacent(i,prev)||blocked(i,prev)){$('feedback').textContent='Keep the path continuous: move one cell horizontally or vertically, and don\'t cross a wall.';return}
+  if(!adjacent(i,prev)||blocked(i,prev)){invalidMove('Keep the path continuous and do not cross a wall.',prev,i);return}
   const cp=cpMap.get(i),nxt=nextCheckpoint();
-  if(cp&&cp!==nxt){$('feedback').textContent='Checkpoint '+cp+' is out of order. Find checkpoint '+nxt+'.';bounceCheckpoint(nxt);return}
-  if(cp===MAX&&path.length+1!==N){$('feedback').textContent='Checkpoint '+MAX+' is the finish. Fill every cell first.';return}
+  if(cp&&cp!==nxt){invalidMove('Checkpoint '+cp+' is out of order. Find checkpoint '+nxt+'.',prev,i);bounceCheckpoint(nxt);return}
+  if(cp===MAX&&path.length+1!==N){invalidMove('Fill every cell before the final checkpoint.',prev,i);return}
   path.push(i)
  }
  const current=path[path.length-1];
@@ -251,6 +279,7 @@ function updateBoard(){
  drawRoute();
  [...$('board').children].forEach((b,i)=>{b.classList.toggle('visited',path.includes(i));b.classList.toggle('next',path[path.length-1]===i)});
  $('currentNumber').textContent=path.length+' / '+N;
+ $('undoBtn').disabled=!path.length;
  const complete=isComplete();
  if(complete)$('feedback').textContent='Path complete! Finish this puzzle.';
  else $('feedback').textContent=`Checkpoint ${Math.min(MAX,nextCheckpoint())} is next · ${path.length} of ${N} cells filled.`;
@@ -281,14 +310,14 @@ $('undoBtn').addEventListener('click',()=>{if(path.length){path.pop();routeMotio
 $('quitBtn').addEventListener('click',()=>{if(confirm('End this attempt? The current result will not be saved.')){clearInterval(timerId);show('startScreen');$('headerStatus').textContent='Ready to play';$('timer').textContent='00:00.00'}});
 $('newTeamBtn').addEventListener('click',()=>{show('startScreen');$('teamName').value='';$('headerTeam').textContent='No team yet';$('headerStatus').textContent='Ready to play';$('timer').textContent='00:00.00';$('teamName').focus()});
 $('printBtn').addEventListener('click',()=>window.print());
-document.addEventListener('pointerup',()=>{dragging=false;pointerSample=null;pointerPrediction=null});
-document.addEventListener('pointercancel',()=>{dragging=false;pointerSample=null;pointerPrediction=null});
+document.addEventListener('pointerup',()=>{dragging=false;erasing=false;pointerSample=null;pointerPrediction=null});
+document.addEventListener('pointercancel',()=>{dragging=false;erasing=false;pointerSample=null;pointerPrediction=null});
 // The predicted, filtered pointer is visual-only; the actual cell under the finger drives the rules.
 $('board').addEventListener('pointermove',e=>{
  if(!dragging)return;
  samplePointer(e);
  const el=document.elementFromPoint(e.clientX,e.clientY);
- if(el&&el.classList.contains('cell'))visit(Number(el.dataset.index))
+ if(el&&el.classList.contains('cell')){const i=Number(el.dataset.index);if(path.indexOf(i)<path.length-1)erasing=true;visit(i)}
 });
 })();
 </script></body></html>
