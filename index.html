@@ -172,7 +172,7 @@ function drawRoute(){
  }
  if(p.length>1)d+=' L '+f(p[p.length-1]);
  const tip=dragging&&pointerPrediction?pointerPrediction:p[p.length-1],stretch=routeMotion.progress<1?1.12:1;
- const flowId='flowPath';svg.innerHTML='<path id="'+flowId+'" d="'+d+'" fill="none" stroke="#ff7a00" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" cx="'+tip[0]+'" cy="'+tip[1]+'" r="'+(.4*stretch)+'" fill="#ff7a00"/><circle class="flow-dot" r=".16"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#'+flowId+'"/></animateMotion></circle>';
+ const flowId='flowPath';svg.innerHTML='<path id="'+flowId+'" d="'+d+'" fill="none" stroke="#ff7a00" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" cx="'+tip[0]+'" cy="'+tip[1]+'" r="'+(.25*stretch)+'" fill="#ff7a00"/><circle class="flow-dot" r=".11"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#'+flowId+'"/></animateMotion></circle>';
  if(routeMotion.progress<1){routeMotion.progress=Math.min(1,routeMotion.progress+.12);routeFrame=requestAnimationFrame(drawRoute)}
 }
 function animateRoute(from,to){routeMotion={from,to,progress:0};cancelAnimationFrame(routeFrame);routeFrame=requestAnimationFrame(drawRoute)}
