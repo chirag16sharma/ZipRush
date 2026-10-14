@@ -227,7 +227,6 @@ function solveFrom(prefix){
  try{return dfs(prefix[prefix.length-1],nextCheckpoint())?seq:null}catch(e){return 'timeout'}
 }
 function hint(){
- if(Date.now()<hintCooldownUntil)return;
  if(isComplete())return;
  if(!path.length){
   path.push(idx(curNums[0]));
@@ -240,18 +239,10 @@ function hint(){
  hints[puzzle]=(hints[puzzle]||0)+1;
  updateBoard();
  $('feedback').textContent='Hint: the next cell was added. '+path.length+' of '+N+' cells filled.';
- updateHintCount();renderProgress();startHintCooldown()
+ updateHintCount();renderProgress()
 }
 function updateHintCount(){$('hintCount').textContent=hintTotal()}
 // After a hint is used, the Hint button is frozen for 5 seconds and shows the countdown.
-let hintCooldownUntil=0,hintCooldownTimer=null;
-function startHintCooldown(){
- hintCooldownUntil=Date.now()+5000;
- const btn=$('hintBtn');btn.disabled=true;
- clearInterval(hintCooldownTimer);
- const update=()=>{const left=Math.ceil((hintCooldownUntil-Date.now())/1000);if(left<=0){clearInterval(hintCooldownTimer);btn.disabled=false;btn.textContent='Hint'}else{btn.textContent='Hint ('+left+'s)'}};
- update();hintCooldownTimer=setInterval(update,200)
-}
 function updateBoard(){
  drawRoute();
  [...$('board').children].forEach((b,i)=>{b.classList.toggle('visited',path.includes(i));b.classList.toggle('next',path[path.length-1]===i)});
