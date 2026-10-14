@@ -228,21 +228,25 @@ function solveFrom(prefix){
 }
 function hint(){
  if(isComplete())return;
+ let hintMsg=null;
  if(!path.length){
   path.push(idx(curNums[0]));
  }else{
-  const sol=solveFrom(path);
-  if(sol===null){$('feedback').textContent='This path can\'t be finished from here. Undo a few cells, then try Hint again.';return}
-  if(sol==='timeout'){$('feedback').textContent='That path is too tangled to check. Undo a few cells, then try Hint again.';return}
-  path.push(sol[path.length]);
+  // Keep the longest part of the path that can still be finished; drop the cells after it.
+  let k=path.length,sol=null;
+  while(k>0){const s=solveFrom(path.slice(0,k));if(s&&s!=='timeout'){sol=s;break}k--}
+  const dropped=path.length-k;
+  path.length=k;
+  if(k===0)path.push(idx(curNums[0]));
+  else path.push(sol[k]);
+  if(dropped>0)hintMsg='Removed '+dropped+' cell'+(dropped>1?'s':'')+' that could not be finished, and added the next correct cell.';
  }
  hints[puzzle]=(hints[puzzle]||0)+1;
  updateBoard();
- $('feedback').textContent='Hint: the next cell was added. '+path.length+' of '+N+' cells filled.';
+ $('feedback').textContent=hintMsg||('Hint: the next cell was added. '+path.length+' of '+N+' cells filled.');
  updateHintCount();renderProgress()
 }
 function updateHintCount(){$('hintCount').textContent=hintTotal()}
-// After a hint is used, the Hint button is frozen for 5 seconds and shows the countdown.
 function updateBoard(){
  drawRoute();
  [...$('board').children].forEach((b,i)=>{b.classList.toggle('visited',path.includes(i));b.classList.toggle('next',path[path.length-1]===i)});
