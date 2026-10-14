@@ -92,7 +92,10 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 <script>
 (()=>{const $=id=>document.getElementById(id);
 let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],hints=[],dragging=false,erasing=false;
-let routeFrame=0,routeMotion={from:null,to:null,progress:1},pointerSample=null,pointerPrediction=null;
+let routeFrame=0,pointerSample=null,pointerPrediction=null;
+// Connector state: `shown` is the list of cells the line currently reaches. It slides toward `path` one cell at a time.
+let shown=[],slideDir=0,slideT0=0;
+const SLIDE_MS=130;
 let R=6,C=6,N=36,MAX=1,cpMap=new Map(),wallSet=new Set(),curWalls=[],curNums=[];
 // Each puzzle: grid size, checkpoints as [row,col] in order (1 to last), and walls between two neighbouring cells.
 const puzzles=[
@@ -113,7 +116,7 @@ function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.re
 function hintTotal(){return hints.reduce((a,b)=>a+(b||0),0)}
 function begin(){team=$('teamName').value.trim()||'Team Unnamed';puzzle=0;done=[];hints=[];path=[];elapsed=0;startedAt=Date.now();clearInterval(timerId);timerId=setInterval(tick,50);$('headerTeam').textContent=team;$('headerStatus').textContent='Challenge in progress';show('gameScreen');loadPuzzle()}
 function loadPuzzle(){
- const P=puzzles[puzzle];R=P.rows;C=P.cols;N=R*C;MAX=P.nums.length;path=[];routeMotion={from:null,to:null,progress:1};pointerSample=null;
+ const P=puzzles[puzzle];R=P.rows;C=P.cols;N=R*C;MAX=P.nums.length;path=[];shown=[];slideDir=0;pointerSample=null;
  curNums=P.nums;
  cpMap=new Map(P.nums.map((rc,i)=>[idx(rc),i+1]));
  curWalls=P.walls;
@@ -155,18 +158,47 @@ function drawBarriers(){
  }).join('')
 }
 // Draw one smooth line through the centre of every cell in the path.
-function drawRoute(){
- const svg=$('route');svg.setAttribute('viewBox','0 0 '+C+' '+R);
- if(!path.length){svg.innerHTML='';return}
- let p=path.map(i=>[(i%C)+.5,Math.floor(i/C)+.5]);
- const animating=false; // the line always ends exactly on the last cell centre; no slide-in animation
- if(animating){
-  // The newest cell slides in from the previous cell. Drop it entirely while it still sits on the previous cell, so no zero-length segment bends the corner.
-  const t=1-Math.pow(1-routeMotion.progress,3);
-  const q=[routeMotion.from[0]+(routeMotion.to[0]-routeMotion.from[0])*t,routeMotion.from[1]+(routeMotion.to[1]-routeMotion.from[1])*t];
-  p.pop();
-  if(Math.hypot(q[0]-routeMotion.from[0],q[1]-routeMotion.from[1])>.01)p.push(q);
+const isPrefix=(a,b)=>a.length<=b.length&&a.every((v,k)=>b[k]===v);
+const easeOut=t=>1-Math.pow(1-Math.min(1,Math.max(0,t)),3);
+// Move `shown` toward `path` one cell per slide. Pure function of time, so it can never stall.
+function advance(now){
+ for(let guard=0;guard<1000;guard++){
+  if(shown.length<path.length&&isPrefix(shown,path)){
+   // Growing: the next cell slides in from the last drawn cell. Several queued cells share the time.
+   const queued=path.length-shown.length,dur=shown.length===0?0:Math.max(40,SLIDE_MS/queued);
+   if(slideDir!==1){slideDir=1;slideT0=now}
+   if(now-slideT0<dur)return;
+   shown.push(path[shown.length]);slideDir=0;continue;
+  }
+  if(shown.length>path.length&&isPrefix(path,shown)){
+   // Shrinking (undo or erase): the tail slides back to the new end, then is removed.
+   if(shown.length<=1){shown=path.slice();slideDir=0;continue}
+   if(slideDir!==-1){slideDir=-1;slideT0=now}
+   if(now-slideT0<SLIDE_MS)return;
+   shown.pop();slideDir=0;continue;
+  }
+  if(shown.length!==path.length){shown=path.slice();slideDir=0}
+  return;
  }
+}
+function drawRoute(){
+ const now=performance.now();
+ advance(now);
+ const svg=$('route');svg.setAttribute('viewBox','0 0 '+C+' '+R);
+ if(!shown.length){svg.innerHTML='';return}
+ // Build the points to draw: the settled cells, plus the one moving point while a slide is in progress.
+ const pts=shown.map(cellCentre);
+ const t=easeOut((now-slideT0)/SLIDE_MS);
+ if(slideDir===1&&shown.length<path.length){
+  const a=cellCentre(shown[shown.length-1]),b=cellCentre(path[shown.length]),dur=shown.length===0?0:Math.max(40,SLIDE_MS/(path.length-shown.length));
+  const e=easeOut((now-slideT0)/dur);
+  pts.push([a[0]+(b[0]-a[0])*e,a[1]+(b[1]-a[1])*e]);
+ }else if(slideDir===-1&&shown.length>path.length){
+  const a=cellCentre(shown[shown.length-1]),b=cellCentre(shown[shown.length-2]);
+  pts[pts.length-1]=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+ }
+ // Remove repeated points so a zero-length segment can never bend a corner.
+ const p=[];for(const q of pts){const last=p[p.length-1];if(!last||Math.hypot(q[0]-last[0],q[1]-last[1])>.005)p.push(q)}
  const f=q=>q[0].toFixed(3)+' '+q[1].toFixed(3),dir=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[dx/l,dy/l]};
  const radius=.28;let d='M '+f(p[0]);
  for(let k=1;k<p.length-1;k++){
@@ -175,17 +207,18 @@ function drawRoute(){
   d+=' L '+f(enter)+' C '+f([p[k][0]-incoming[0]*radius*.35,p[k][1]-incoming[1]*radius*.35])+' '+f([p[k][0]+outgoing[0]*radius*.35,p[k][1]+outgoing[1]*radius*.35])+' '+f(exit);
  }
  if(p.length>1)d+=' L '+f(p[p.length-1]);
- const tip=p[p.length-1],stretch=animating?1.12:1;
- // Update the existing elements in place (rather than rebuilding them) so the moving dot keeps its place.
+ const tip=p[p.length-1],moving=slideDir!==0;
  if(!svg.querySelector('#flowPath')){
   svg.innerHTML='<path id="flowPath" fill="none" stroke="#ff7a00" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" fill="#ff7a00"/><circle class="flow-dot" r=".11"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#flowPath"/></animateMotion></circle>';
  }
  svg.querySelector('#flowPath').setAttribute('d',d);
  const tipEl=svg.querySelector('.route-tip');
- tipEl.setAttribute('cx',tip[0].toFixed(3));tipEl.setAttribute('cy',tip[1].toFixed(3));tipEl.setAttribute('r',(.21*stretch).toFixed(3));
- if(animating){routeMotion.progress=Math.min(1,routeMotion.progress+.12);routeFrame=requestAnimationFrame(drawRoute)}
+ tipEl.setAttribute('cx',tip[0].toFixed(3));tipEl.setAttribute('cy',tip[1].toFixed(3));tipEl.setAttribute('r',(moving?.25:.21).toFixed(3));
+ // Keep exactly one animation frame pending while a slide is running.
+ if((slideDir!==0||shown.length!==path.length)&&!routeFrame){
+  routeFrame=requestAnimationFrame(()=>{routeFrame=0;drawRoute()});
+ }
 }
-function animateRoute(){} // the slide-in animation was removed: it left stubs short of the cell centre on phones
 function cellCentre(i){return[(i%C)+.5,Math.floor(i/C)+.5]}
 function samplePointer(e){
  // Pointer position is tracked only to decide which cell is under the finger; the drawn line always ends on a real cell.
@@ -220,13 +253,13 @@ function invalidMove(message,from,to){
 }
 function undoStep(){
  if(!path.length)return;
- path.pop();routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent=path.length?'Undo: continue from the active end.':'Start at checkpoint 1.'
+ path.pop();updateBoard();$('feedback').textContent=path.length?'Undo: continue from the active end.':'Start at checkpoint 1.'
 }
 function visit(i){
  if(path.length&&path[path.length-1]===i)return;
  if(path.includes(i)){
   // Erase one cell at a time: only dragging back onto the cell just before the end removes the active end.
-  if(erasing&&path.length>1&&path[path.length-2]===i){path.pop();routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent='Erased one cell. Continue from the active end.';return}
+  if(erasing&&path.length>1&&path[path.length-2]===i){path.pop();updateBoard();$('feedback').textContent='Erased one cell. Continue from the active end.';return}
   if(erasing){$('feedback').textContent='Drag back one cell at a time to erase, or tap Undo.';return}
   invalidMove('That cell is already in your path.',path[path.length-1],i);return
  }
@@ -241,8 +274,7 @@ function visit(i){
  }
  const current=path[path.length-1];
  updateBoard();
- if(path.length>1)animateRoute(cellCentre(path[path.length-2]),cellCentre(current));
- const checkpoint=cpMap.get(current);
+  const checkpoint=cpMap.get(current);
  if(checkpoint)pulseCheckpoint(current)
 }
 // Depth-first search from the end of the current path to a full solution. Returns the full sequence, null if none, or 'timeout'.
@@ -315,8 +347,8 @@ $('startBtn').addEventListener('click',begin);
 $('teamName').addEventListener('keydown',e=>{if(e.key==='Enter')begin()});
 $('nextBtn').addEventListener('click',finishPuzzle);
 $('hintBtn').addEventListener('click',hint);
-$('resetPuzzleBtn').addEventListener('click',()=>{path=[];routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent='Puzzle restarted. Start at checkpoint 1.'});
-$('undoBtn').addEventListener('click',()=>{if(path.length){path.pop();routeMotion={from:null,to:null,progress:1};updateBoard()}});
+$('resetPuzzleBtn').addEventListener('click',()=>{path=[];shown=[];slideDir=0;updateBoard();$('feedback').textContent='Puzzle restarted. Start at checkpoint 1.'});
+$('undoBtn').addEventListener('click',()=>{if(path.length){path.pop();updateBoard()}});
 $('quitBtn').addEventListener('click',()=>{if(confirm('End this attempt? The current result will not be saved.')){clearInterval(timerId);show('startScreen');$('headerStatus').textContent='Ready to play';$('timer').textContent='00:00.00'}});
 $('newTeamBtn').addEventListener('click',()=>{show('startScreen');$('teamName').value='';$('headerTeam').textContent='No team yet';$('headerStatus').textContent='Ready to play';$('timer').textContent='00:00.00';$('teamName').focus()});
 $('printBtn').addEventListener('click',()=>window.print());
