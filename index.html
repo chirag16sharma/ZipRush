@@ -223,5 +223,8 @@ $('quitBtn').addEventListener('click',()=>{if(confirm('End this attempt? The cur
 $('newTeamBtn').addEventListener('click',()=>{show('startScreen');$('teamName').value='';$('headerTeam').textContent='No team yet';$('headerStatus').textContent='Ready to play';$('timer').textContent='00:00.00';$('teamName').focus()});
 $('printBtn').addEventListener('click',()=>window.print());
 document.addEventListener('pointerup',()=>dragging=false);
+document.addEventListener('pointercancel',()=>dragging=false);
+// Touch drags keep reporting to the cell where the touch started, so find the cell under the finger instead.
+$('board').addEventListener('pointermove',e=>{if(inputMode!=='swipe'||!dragging)return;const el=document.elementFromPoint(e.clientX,e.clientY);if(el&&el.classList.contains('cell'))visit(Number(el.dataset.index))});
 })();
 </script></body></html>
