@@ -224,7 +224,12 @@ function undoStep(){
 }
 function visit(i){
  if(path.length&&path[path.length-1]===i)return;
- if(path.includes(i)){if(erasing){const position=path.indexOf(i);path=path.slice(0,position+1);routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent='Path shortened. Continue from the active end.';return}invalidMove('That cell is already in your path.',path[path.length-1],i);return}
+ if(path.includes(i)){
+  // Erase one cell at a time: only dragging back onto the cell just before the end removes the active end.
+  if(erasing&&path.length>1&&path[path.length-2]===i){path.pop();routeMotion={from:null,to:null,progress:1};updateBoard();$('feedback').textContent='Erased one cell. Continue from the active end.';return}
+  if(erasing){$('feedback').textContent='Drag back one cell at a time to erase, or tap Undo.';return}
+  invalidMove('That cell is already in your path.',path[path.length-1],i);return
+ }
  if(!path.length){if(cpMap.get(i)!==1){invalidMove('Start at checkpoint 1.');return}path.push(i)}
  else{
   const prev=path[path.length-1];
