@@ -158,10 +158,14 @@ function drawBarriers(){
 function drawRoute(){
  const svg=$('route');svg.setAttribute('viewBox','0 0 '+C+' '+R);
  if(!path.length){svg.innerHTML='';return}
- const p=path.map(i=>[(i%C)+.5,Math.floor(i/C)+.5]);
- if(routeMotion.from&&routeMotion.to&&routeMotion.progress<1){
-  const t=1-Math.pow(1-routeMotion.progress,3),last=p.length-1;
-  p[last]=[routeMotion.from[0]+(routeMotion.to[0]-routeMotion.from[0])*t,routeMotion.from[1]+(routeMotion.to[1]-routeMotion.from[1])*t];
+ let p=path.map(i=>[(i%C)+.5,Math.floor(i/C)+.5]);
+ const animating=routeMotion.from&&routeMotion.to&&routeMotion.progress<1;
+ if(animating){
+  // The newest cell slides in from the previous cell. Drop it entirely while it still sits on the previous cell, so no zero-length segment bends the corner.
+  const t=1-Math.pow(1-routeMotion.progress,3);
+  const q=[routeMotion.from[0]+(routeMotion.to[0]-routeMotion.from[0])*t,routeMotion.from[1]+(routeMotion.to[1]-routeMotion.from[1])*t];
+  p.pop();
+  if(Math.hypot(q[0]-routeMotion.from[0],q[1]-routeMotion.from[1])>.01)p.push(q);
  }
  const f=q=>q[0].toFixed(3)+' '+q[1].toFixed(3),dir=(a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[dx/l,dy/l]};
  const radius=.28;let d='M '+f(p[0]);
@@ -171,20 +175,21 @@ function drawRoute(){
   d+=' L '+f(enter)+' C '+f([p[k][0]-incoming[0]*radius*.35,p[k][1]-incoming[1]*radius*.35])+' '+f([p[k][0]+outgoing[0]*radius*.35,p[k][1]+outgoing[1]*radius*.35])+' '+f(exit);
  }
  if(p.length>1)d+=' L '+f(p[p.length-1]);
- const tip=dragging&&pointerPrediction?pointerPrediction:p[p.length-1],stretch=routeMotion.progress<1?1.12:1;
- const flowId='flowPath';svg.innerHTML='<path id="'+flowId+'" d="'+d+'" fill="none" stroke="#ff7a00" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" cx="'+tip[0]+'" cy="'+tip[1]+'" r="'+(.21*stretch)+'" fill="#ff7a00"/><circle class="flow-dot" r=".11"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#'+flowId+'"/></animateMotion></circle>';
- if(routeMotion.progress<1){routeMotion.progress=Math.min(1,routeMotion.progress+.12);routeFrame=requestAnimationFrame(drawRoute)}
+ const tip=p[p.length-1],stretch=animating?1.12:1;
+ // Update the existing elements in place (rather than rebuilding them) so the moving dot keeps its place.
+ if(!svg.querySelector('#flowPath')){
+  svg.innerHTML='<path id="flowPath" fill="none" stroke="#ff7a00" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round"/><circle class="route-tip" fill="#ff7a00"/><circle class="flow-dot" r=".11"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#flowPath"/></animateMotion></circle>';
+ }
+ svg.querySelector('#flowPath').setAttribute('d',d);
+ const tipEl=svg.querySelector('.route-tip');
+ tipEl.setAttribute('cx',tip[0].toFixed(3));tipEl.setAttribute('cy',tip[1].toFixed(3));tipEl.setAttribute('r',(.21*stretch).toFixed(3));
+ if(animating){routeMotion.progress=Math.min(1,routeMotion.progress+.12);routeFrame=requestAnimationFrame(drawRoute)}
 }
 function animateRoute(from,to){routeMotion={from,to,progress:0};cancelAnimationFrame(routeFrame);routeFrame=requestAnimationFrame(drawRoute)}
 function cellCentre(i){return[(i%C)+.5,Math.floor(i/C)+.5]}
 function samplePointer(e){
- const rect=$('board').getBoundingClientRect(),rawX=(e.clientX-rect.left)/rect.width*C,rawY=(e.clientY-rect.top)/rect.height*R,now=performance.now(),previous=pointerSample,dt=previous?Math.max(8,now-previous.time):16;
- const alpha=previous?Math.min(.72,Math.max(.22,dt/28)):1,x=previous?previous.x+(rawX-previous.x)*alpha:rawX,y=previous?previous.y+(rawY-previous.y)*alpha:rawY;
- const vx=previous?(x-previous.x)/dt:0,vy=previous?(y-previous.y)/dt:0;
- pointerSample={x,y,time:now};
- const lead=Math.min(.45,Math.max(.08,dt*.02)),predicted=[x+vx*lead,y+vy*lead],tip=$('route').querySelector('.route-tip');
- pointerPrediction=predicted;
- if(tip&&path.length){tip.setAttribute('cx',predicted[0]);tip.setAttribute('cy',predicted[1])}
+ // Pointer position is tracked only to decide which cell is under the finger; the drawn line always ends on a real cell.
+ pointerSample={x:e.clientX,y:e.clientY,time:performance.now()};
 }
 // Bounce the checkpoint the player missed, to show which number they skipped.
 function bounceCheckpoint(n){
