@@ -62,7 +62,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 .cell:hover{border-color:var(--accent)}
 .cell.visited{background:transparent;border-color:transparent;color:var(--visited-text)}
 .cell.next{outline:3px solid var(--accent-dark);outline-offset:1px}
-.cell.goal{border:2px solid var(--accent-dark)}
+.cell.goal:not(.visited){border:2px solid var(--accent-dark)}
 .board-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid #fed7aa;border-radius:12px;color:var(--muted);font-size:13px}
 .actions{display:flex;gap:10px;margin-top:16px}
 .actions>.btn{flex:1}
@@ -126,7 +126,7 @@ function renderBoard(){
   const n=cpMap.get(i);const b=document.createElement('button');b.type='button';b.className='cell';b.dataset.index=i;b.textContent=n||'';b.setAttribute('aria-label',n?'Checkpoint '+n:'Blank cell');
   if(path.includes(i))b.classList.add('visited');
   if(path.length&&path[path.length-1]===i)b.classList.add('next');
-  if(n===1){b.style.borderColor='var(--accent)';b.style.background='var(--soft)'}
+  if(n===1&&!path.includes(i)){b.style.borderColor='var(--accent)';b.style.background='var(--soft)'}
   if(n===MAX)b.classList.add('goal');
   b.addEventListener('pointerdown',e=>{dragging=true;visit(i);e.preventDefault()});
   b.addEventListener('pointerenter',e=>{if(dragging&&e.buttons)visit(i)});
@@ -139,8 +139,19 @@ function renderBoard(){
 // Draw one smooth line through the centre of every cell in the path.
 function drawRoute(){
  const svg=$('route');svg.setAttribute('viewBox','0 0 '+C+' '+R);
- const pts=path.map(i=>((i%C)+0.5)+','+(Math.floor(i/C)+0.5)).join(' ');
- svg.innerHTML=path.length?'<polyline points="'+pts+'" fill="none" stroke="#ff7a00" stroke-width="0.32" stroke-linecap="round" stroke-linejoin="round"/>':'';
+ if(!path.length){svg.innerHTML='';return}
+ // Curve through cell centres: each turn is rounded with a quadratic curve that bends at the cell centre.
+ const p=path.map(i=>[(i%C)+0.5,Math.floor(i/C)+0.5]);
+ const mid=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2];
+ const f=q=>q[0]+' '+q[1];
+ let d='M '+f(p[0]);
+ if(p.length===2)d+=' L '+f(p[1]);
+ else if(p.length>2){
+  d+=' L '+f(mid(p[0],p[1]));
+  for(let k=1;k<p.length-1;k++)d+=' Q '+f(p[k])+' '+f(mid(p[k],p[k+1]));
+  d+=' L '+f(p[p.length-1]);
+ }
+ svg.innerHTML='<path d="'+d+'" fill="none" stroke="#ff7a00" stroke-width="0.32" stroke-linecap="round" stroke-linejoin="round"/>';
 }
 function nextCheckpoint(){let max=0;path.forEach(i=>{if(cpMap.has(i))max=Math.max(max,cpMap.get(i))});return max+1}
 function isComplete(){return path.length===N&&cpMap.get(path[path.length-1])===MAX}
