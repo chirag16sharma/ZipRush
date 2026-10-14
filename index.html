@@ -75,6 +75,8 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 .result-time{font-size:44px;font-weight:900;color:var(--accent-dark);font-variant-numeric:tabular-nums}
 .footer{text-align:center;color:#a16207;font-size:12px;padding:28px 0 12px}
 .hidden{display:none!important}
+.cell.bounce{animation:cellBounce .6s ease}
+@keyframes cellBounce{0%,100%{transform:scale(1)}25%{transform:scale(1.35)}50%{transform:scale(.85)}75%{transform:scale(1.15)}}
 @media(max-width:950px){.game-layout{grid-template-columns:1fr 2fr}.game-layout .howto{grid-column:1/-1}.start-layout{grid-template-columns:1fr}}
 @media(max-width:650px){.wrap{padding:10px}.top{align-items:flex-start;flex-direction:column}.topright{width:100%;justify-content:space-between}.game-layout{grid-template-columns:1fr}.game-layout .progress,.game-layout .board-panel,.game-layout .howto{grid-column:1}.game-layout .board-panel{grid-row:1}.game-layout .progress{grid-row:2}.game-layout .howto{grid-row:3}.board-wrap{margin:16px auto;max-width:100%}.board{gap:0}.cell{font-size:clamp(13px,4vw,19px);min-height:0}.panel{padding:14px}.brand{letter-spacing:-1px}.actions{flex-direction:column}.actions .btn{width:100%;padding:13px}.topright{gap:8px}.timerbox,.teamchip{padding:10px 12px}.timer{font-size:25px}.teamchip{min-width:0;max-width:45%;overflow-wrap:anywhere}}
 </style></head><body><div class="wrap">
@@ -156,6 +158,15 @@ function drawRoute(){
  if(p.length>1)d+=' L '+f(p[p.length-1]);
  svg.innerHTML='<path d="'+d+'" fill="none" stroke="#ff7a00" stroke-width="0.42" stroke-linecap="round" stroke-linejoin="round"/>';
 }
+// Bounce the checkpoint the player missed, to show which number they skipped.
+function bounceCheckpoint(n){
+ const entry=[...cpMap.entries()].find(([,v])=>v===n);
+ if(!entry)return;
+ const el=$('board').children[entry[0]];
+ if(!el)return;
+ el.classList.remove('bounce');void el.offsetWidth;el.classList.add('bounce');
+ el.addEventListener('animationend',()=>el.classList.remove('bounce'),{once:true});
+}
 function nextCheckpoint(){let max=0;path.forEach(i=>{if(cpMap.has(i))max=Math.max(max,cpMap.get(i))});return max+1}
 function isComplete(){return path.length===N&&cpMap.get(path[path.length-1])===MAX}
 function visit(i){
@@ -166,7 +177,7 @@ function visit(i){
   const prev=path[path.length-1];
   if(!adjacent(i,prev)||blocked(i,prev)){$('feedback').textContent='Keep the path continuous: move one cell horizontally or vertically, and don\'t cross a wall.';return}
   const cp=cpMap.get(i),nxt=nextCheckpoint();
-  if(cp&&cp!==nxt){$('feedback').textContent='Checkpoint '+cp+' is out of order. Find checkpoint '+nxt+'.';return}
+  if(cp&&cp!==nxt){$('feedback').textContent='Checkpoint '+cp+' is out of order. Find checkpoint '+nxt+'.';bounceCheckpoint(nxt);return}
   if(cp===MAX&&path.length+1!==N){$('feedback').textContent='Checkpoint '+MAX+' is the finish. Fill every cell first.';return}
   path.push(i)
  }
