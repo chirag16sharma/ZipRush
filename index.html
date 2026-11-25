@@ -273,7 +273,7 @@ function visit(i){
   const cp=cpMap.get(i),nxt=nextCheckpoint();
   if(cp&&cp!==nxt){invalidMove('Checkpoint '+cp+' is out of order. Find checkpoint '+nxt+'.',prev,i);bounceCheckpoint(nxt);return}
   if(cp===MAX&&path.length+1!==N){invalidMove('Fill every cell before the final checkpoint.',prev,i);return}
-  path.push(i)
+  path.push(i);erasing=false
  }
  const current=path[path.length-1];
  updateBoard();
