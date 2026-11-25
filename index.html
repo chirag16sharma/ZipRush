@@ -140,9 +140,9 @@ function renderBoard(){
   if(n===MAX)b.classList.add('goal');
   b.addEventListener('pointerdown',e=>{
    if(path.length&&path[path.length-1]===i){undoStep();e.preventDefault();return}
-   erasing=path.includes(i);dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);visit(i);e.preventDefault()
+   erasing=path.length>0&&path[path.length-1]===i;dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);visit(i);e.preventDefault()
   });
-  b.addEventListener('pointerenter',e=>{if(dragging&&e.buttons){if(path.indexOf(i)<path.length-1)erasing=true;visit(i)}});
+  b.addEventListener('pointerenter',e=>{if(dragging&&e.buttons){visit(i)}});
   b.addEventListener('pointerup',()=>{dragging=false;erasing=false});
   board.appendChild(b)
  }
@@ -213,7 +213,7 @@ function drawRoute(){
  }
  svg.querySelector('#flowPath').setAttribute('d',d);
  const tipEl=svg.querySelector('.route-tip');
- tipEl.setAttribute('cx',tip[0].toFixed(3));tipEl.setAttribute('cy',tip[1].toFixed(3));tipEl.setAttribute('r',(moving?.25:.21).toFixed(3));
+ tipEl.setAttribute('cx',tip[0].toFixed(3));tipEl.setAttribute('cy',tip[1].toFixed(3));tipEl.setAttribute('r',(.21).toFixed(3));
  // Keep exactly one animation frame pending while a slide is running.
  if((slideDir!==0||shown.length!==path.length)&&!routeFrame){
   routeFrame=requestAnimationFrame(()=>{routeFrame=0;drawRoute()});
@@ -359,7 +359,7 @@ $('board').addEventListener('pointermove',e=>{
  if(!dragging)return;
  samplePointer(e);
  const el=document.elementFromPoint(e.clientX,e.clientY);
- if(el&&el.classList.contains('cell')){const i=Number(el.dataset.index);if(path.indexOf(i)<path.length-1)erasing=true;visit(i)}
+ if(el&&el.classList.contains('cell')){const i=Number(el.dataset.index);visit(i)}
 });
 })();
 </script></body></html>
