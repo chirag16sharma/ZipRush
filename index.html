@@ -91,7 +91,7 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 </main><div class="footer">ZIP RUSH · CLUB CHALLENGE · Created by Chirag Sharma · Created in 3000 BCE</div></div>
 <script>
 (()=>{const $=id=>document.getElementById(id);
-let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],hints=[],dragging=false,erasing=false;
+let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],hints=[],dragging=false,erasing=false,pressEnd=-1,pressMoved=false;
 let routeFrame=0,pointerSample=null,pointerPrediction=null;
 // Connector state: `shown` is the list of cells the line currently reaches. It slides toward `path` one cell at a time.
 let shown=[],slideDir=0,slideT0=0;
@@ -139,11 +139,13 @@ function renderBoard(){
   if(n)b.classList.add('cp');
   if(n===MAX)b.classList.add('goal');
   b.addEventListener('pointerdown',e=>{
-   if(path.length&&path[path.length-1]===i){undoStep();e.preventDefault();return}
-   erasing=path.length>0&&path[path.length-1]===i;dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);visit(i);e.preventDefault()
+   if(path.length&&path[path.length-1]===i){pressEnd=i;pressMoved=false;erasing=true;dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);e.preventDefault();return}
+   pressEnd=-1;erasing=false;dragging=true;b.setPointerCapture?.(e.pointerId);samplePointer(e);visit(i);e.preventDefault()
   });
   b.addEventListener('pointerenter',e=>{if(dragging&&e.buttons){visit(i)}});
   b.addEventListener('pointerup',()=>{dragging=false;erasing=false});
+  // A real tap on the active end undoes one cell. A press that is dragged does not.
+  b.addEventListener('click',()=>{if(i===pressEnd&&!pressMoved&&path.length&&path[path.length-1]===i)undoStep();pressEnd=-1});
   board.appendChild(b)
  }
  drawBarriers();drawRoute()
@@ -256,6 +258,7 @@ function undoStep(){
  path.pop();updateBoard();$('feedback').textContent=path.length?'Undo: continue from the active end.':'Start at checkpoint 1.'
 }
 function visit(i){
+ if(i!==pressEnd)pressMoved=true;
  if(path.length&&path[path.length-1]===i)return;
  if(path.includes(i)){
   // Erase one cell at a time: only dragging back onto the cell just before the end removes the active end.
