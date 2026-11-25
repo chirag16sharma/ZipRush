@@ -85,13 +85,13 @@ input:focus{border-color:var(--accent);box-shadow:0 0 0 3px #f9731633}
 </style></head><body><div class="wrap">
 <header class="top"><div><div class="brand">ZIP <span>RUSH</span></div><div class="tag">THE 5-PUZZLE CHALLENGE · Think fast. Beat the clock.</div></div><div class="topright"><div class="timerbox"><small>TIME ELAPSED</small><div class="timer" id="timer">00:00.00</div></div><div class="teamchip"><strong id="headerTeam">No team yet</strong><small id="headerStatus">Ready to play</small></div></div></header>
 <main>
-<section id="startScreen" class="screen active"><div class="start-layout"><div class="panel hero"><div class="eyebrow">One team. Five puzzles. One winner.</div><h1>READY.<br><em>SET.</em><br>ZIP!</h1><p>Trace five challenging paths. Most cells are blank: plan your route between numbered checkpoints, fill every cell exactly once, and beat the clock.</p><div class="pills"><span class="pill">5 puzzles</span><span class="pill">6 × 6 and 7 × 7 grids</span><span class="pill">Some walls</span><span class="pill">Hints are counted</span><span class="pill">Swipe to play</span></div><label class="field" for="teamName">ENTER TEAM NAME</label><input id="teamName" maxlength="32" placeholder="e.g. Code Crushers" autocomplete="off"><button id="startBtn" class="btn primary">START CHALLENGE →</button><div class="subtle">The timer begins at start and stops after puzzle five. On a phone, swipe across the cells to draw your path.</div></div><div class="panel side"><div class="eyebrow">Before you begin</div><h2>How to play</h2><div class="steps"><div class="step"><div class="num">01</div><div><strong>Start at 1</strong><p>Begin at checkpoint 1, then drag through adjacent cells.</p></div></div><div class="step"><div class="num">02</div><div><strong>Connect in sequence</strong><p>Swipe across cells to draw a continuous path.</p></div></div><div class="step"><div class="num">03</div><div><strong>Don't skip or repeat</strong><p>Diagonal moves, revisiting cells, and crossing walls are not allowed.</p></div></div><div class="step"><div class="num">04</div><div><strong>Finish all five</strong><p>Complete each grid to advance. Your total time decides the result.</p></div></div></div></div></div></section>
-<section id="gameScreen" class="screen"><div class="game-layout"><aside class="panel progress"><div class="eyebrow">Your progress</div><h2 id="progressCount">1 / 5</h2><div class="progress-list" id="progressList"></div><div class="notice">Keep moving. The timer continues between puzzles.</div><button id="quitBtn" class="btn secondary" style="width:100%;margin-top:18px">End attempt</button></aside><section class="panel board-panel"><div class="puzzle-head"><div><span class="ziplabel" id="zipLabel">ZIP 1</span> <span style="color:var(--muted);margin-left:8px" id="zipOf">of 5</span></div><span class="pill" id="gridPill">6 × 6 GRID</span></div><h2 style="margin:18px 0 4px">Connect the numbers in order.</h2><div class="instructions">Swipe across cells to draw. Tap the active end to undo one cell, or swipe backward along the route to erase.</div><div class="board-meta" id="boardMeta"><span>Cells filled: <strong id="currentNumber">0 / 36</strong></span><span>Hints used: <strong id="hintCount">0</strong></span><span>Flow: 1 → end</span></div><div class="board-wrap" id="boardWrap"><svg class="route" id="route" viewBox="0 0 6 6" aria-hidden="true"></svg><svg class="barriers" id="barriers" viewBox="0 0 6 6" aria-hidden="true"></svg><div class="board" id="board" aria-label="Puzzle grid"></div></div><div class="board-meta"><span id="feedback" aria-live="polite">Swipe from checkpoint 1 to start.</span></div><div class="actions" style="margin-top:10px"><button class="btn secondary" id="undoBtn">Undo last cell</button><button class="btn secondary" id="hintBtn">Hint</button></div><div class="actions"><button class="btn secondary" id="resetPuzzleBtn">Restart puzzle</button><button class="btn primary" id="nextBtn" style="width:auto;margin:0" disabled>Finish puzzle</button></div></section><aside class="panel howto"><div class="eyebrow">Rules</div><h2>Play fair</h2><ol class="rules"><li>Trace one continuous path that visits every cell in the grid.</li><li>Hit the numbered checkpoints in order, starting at 1 and finishing on the highest number.</li><li>Move up, down, left, or right only, and never cross a wall.</li><li>Each cell can be visited only once.</li><li>A hint adds the next correct cell and is counted against your result.</li></ol><div class="notice">Tip: tap the active end to undo one cell. Swipe backward to erase several cells.</div></aside></div></section>
-<section id="resultScreen" class="screen"><div class="panel result"><div class="eyebrow">Challenge complete</div><h1 id="resultTitle">ZIP RUSH CHAMPION</h1><p style="color:var(--muted)">All five puzzles completed by <strong id="resultTeam"></strong>.</p><div class="result-time" id="finalTime">00:00.00</div><p style="color:var(--muted)">FINAL TIME</p><div class="pills" style="justify-content:center"><span class="pill">5 / 5 puzzles completed</span><span class="pill">Hints used: <strong id="resultHints">0</strong></span><span class="pill">Result ready to record</span></div><button class="btn primary" id="printBtn" style="max-width:320px">PRINT RESULT</button><button class="btn secondary" id="newTeamBtn" style="max-width:320px;margin:10px">RUN ANOTHER TEAM</button><div class="subtle">This prototype doesn't store results after the page is closed. Record the time and hints for your event leaderboard.</div></div></section>
+<section id="startScreen" class="screen active"><div class="start-layout"><div class="panel hero"><div class="eyebrow">One team. Five puzzles. One winner.</div><h1>READY.<br><em>SET.</em><br>ZIP!</h1><p>Trace five challenging paths. Most cells are blank: plan your route between numbered checkpoints, fill every cell exactly once, and beat the clock.</p><div class="pills"><span class="pill">5 puzzles</span><span class="pill">6 × 6 and 7 × 7 grids</span><span class="pill">Some walls</span><span class="pill">Swipe to play</span></div><label class="field" for="teamName">ENTER TEAM NAME</label><input id="teamName" maxlength="32" placeholder="e.g. Code Crushers" autocomplete="off"><button id="startBtn" class="btn primary">START CHALLENGE →</button><div class="subtle">The timer begins at start and stops after puzzle five. On a phone, swipe across the cells to draw your path.</div></div><div class="panel side"><div class="eyebrow">Before you begin</div><h2>How to play</h2><div class="steps"><div class="step"><div class="num">01</div><div><strong>Start at 1</strong><p>Begin at checkpoint 1, then drag through adjacent cells.</p></div></div><div class="step"><div class="num">02</div><div><strong>Connect in sequence</strong><p>Swipe across cells to draw a continuous path.</p></div></div><div class="step"><div class="num">03</div><div><strong>Don't skip or repeat</strong><p>Diagonal moves, revisiting cells, and crossing walls are not allowed.</p></div></div><div class="step"><div class="num">04</div><div><strong>Finish all five</strong><p>Complete each grid to advance. Your total time decides the result.</p></div></div></div></div></div></section>
+<section id="gameScreen" class="screen"><div class="game-layout"><aside class="panel progress"><div class="eyebrow">Your progress</div><h2 id="progressCount">1 / 5</h2><div class="progress-list" id="progressList"></div><div class="notice">Keep moving. The timer continues between puzzles.</div><button id="quitBtn" class="btn secondary" style="width:100%;margin-top:18px">End attempt</button></aside><section class="panel board-panel"><div class="puzzle-head"><div><span class="ziplabel" id="zipLabel">ZIP 1</span> <span style="color:var(--muted);margin-left:8px" id="zipOf">of 5</span></div><span class="pill" id="gridPill">6 × 6 GRID</span></div><h2 style="margin:18px 0 4px">Connect the numbers in order.</h2><div class="instructions">Swipe across cells to draw. Tap the active end to undo one cell, or swipe backward along the route to erase.</div><div class="board-meta" id="boardMeta"><span>Cells filled: <strong id="currentNumber">0 / 36</strong></span><span>Flow: 1 → end</span></div><div class="board-wrap" id="boardWrap"><svg class="route" id="route" viewBox="0 0 6 6" aria-hidden="true"></svg><svg class="barriers" id="barriers" viewBox="0 0 6 6" aria-hidden="true"></svg><div class="board" id="board" aria-label="Puzzle grid"></div></div><div class="board-meta"><span id="feedback" aria-live="polite">Swipe from checkpoint 1 to start.</span></div><div class="actions" style="margin-top:10px"><button class="btn secondary" id="undoBtn">Undo last cell</button></div><div class="actions"><button class="btn secondary" id="resetPuzzleBtn">Restart puzzle</button><button class="btn primary" id="nextBtn" style="width:auto;margin:0" disabled>Finish puzzle</button></div></section><aside class="panel howto"><div class="eyebrow">Rules</div><h2>Play fair</h2><ol class="rules"><li>Trace one continuous path that visits every cell in the grid.</li><li>Hit the numbered checkpoints in order, starting at 1 and finishing on the highest number.</li><li>Move up, down, left, or right only, and never cross a wall.</li><li>Each cell can be visited only once.</li></ol><div class="notice">Tip: tap the active end to undo one cell. Swipe backward to erase several cells.</div></aside></div></section>
+<section id="resultScreen" class="screen"><div class="panel result"><div class="eyebrow">Challenge complete</div><h1 id="resultTitle">ZIP RUSH CHAMPION</h1><p style="color:var(--muted)">All five puzzles completed by <strong id="resultTeam"></strong>.</p><div class="result-time" id="finalTime">00:00.00</div><p style="color:var(--muted)">FINAL TIME</p><div class="pills" style="justify-content:center"><span class="pill">5 / 5 puzzles completed</span><span class="pill">Result ready to record</span></div><button class="btn primary" id="printBtn" style="max-width:320px">PRINT RESULT</button><button class="btn secondary" id="newTeamBtn" style="max-width:320px;margin:10px">RUN ANOTHER TEAM</button><div class="subtle">This prototype doesn't store results after the page is closed. Record the time for your event leaderboard.</div></div></section>
 </main><div class="footer">ZIP RUSH · CLUB CHALLENGE · Created by Chirag Sharma · Created in 3000 BCE</div></div>
 <script>
 (()=>{const $=id=>document.getElementById(id);
-let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],hints=[],dragging=false,erasing=false,pressEnd=-1,pressMoved=false;
+let team='',puzzle=0,startedAt=0,elapsed=0,timerId=null,done=[],path=[],dragging=false,erasing=false,pressEnd=-1,pressMoved=false;
 let routeFrame=0,pointerSample=null,pointerPrediction=null;
 // Connector state: `shown` is the list of cells the line currently reaches. It slides toward `path` one cell at a time.
 let shown=[],slideDir=0,slideT0=0;
@@ -113,8 +113,7 @@ function neighbours(i){const r=Math.floor(i/C),c=i%C,out=[];for(const [dr,dc] of
 function fmt(ms){let cs=Math.floor(ms/10)%100,s=Math.floor(ms/1000),m=Math.floor(s/60);return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0')+'.'+String(cs).padStart(2,'0')}
 function tick(){elapsed=Date.now()-startedAt;$('timer').textContent=fmt(elapsed)}
 function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$(id).classList.add('active')}
-function hintTotal(){return hints.reduce((a,b)=>a+(b||0),0)}
-function begin(){team=$('teamName').value.trim()||'Team Unnamed';puzzle=0;done=[];hints=[];path=[];elapsed=0;startedAt=Date.now();clearInterval(timerId);timerId=setInterval(tick,50);$('headerTeam').textContent=team;$('headerStatus').textContent='Challenge in progress';show('gameScreen');loadPuzzle()}
+function begin(){team=$('teamName').value.trim()||'Team Unnamed';puzzle=0;done=[];path=[];elapsed=0;startedAt=Date.now();clearInterval(timerId);timerId=setInterval(tick,50);$('headerTeam').textContent=team;$('headerStatus').textContent='Challenge in progress';show('gameScreen');loadPuzzle()}
 function loadPuzzle(){
  const P=puzzles[puzzle];R=P.rows;C=P.cols;N=R*C;MAX=P.nums.length;path=[];shown=[];slideDir=0;pointerSample=null;
  curNums=P.nums;
@@ -128,7 +127,7 @@ function loadPuzzle(){
  $('feedback').textContent='Start at checkpoint 1. Swipe or tap adjacent cells.';
  $('nextBtn').disabled=true;
  $('nextBtn').textContent=puzzle===puzzles.length-1?'Complete challenge':'Finish puzzle';
- renderBoard();renderProgress();updateHintCount()
+ renderBoard();renderProgress()
 }
 function renderBoard(){
  const board=$('board');board.innerHTML='';board.style.gridTemplateColumns='repeat('+C+',minmax(0,1fr))';
@@ -281,45 +280,6 @@ function visit(i){
  if(checkpoint)pulseCheckpoint(current)
 }
 // Depth-first search from the end of the current path to a full solution. Returns the full sequence, null if none, or 'timeout'.
-function solveFrom(prefix){
- const seq=prefix.slice(),vis=new Set(seq);let budget=3000000;
- function dfs(cur,nn){
-  if(--budget<0)throw new Error('budget');
-  if(seq.length===N)return cpMap.get(cur)===MAX;
-  for(const j of neighbours(cur)){
-   if(vis.has(j))continue;
-   const cp=cpMap.get(j);
-   if(cp&&cp!==nn)continue;
-   if(cp===MAX&&seq.length+1!==N)continue;
-   vis.add(j);seq.push(j);
-   if(dfs(j,cp?nn+1:nn))return true;
-   vis.delete(j);seq.pop();
-  }
-  return false;
- }
- try{return dfs(prefix[prefix.length-1],nextCheckpoint())?seq:null}catch(e){return 'timeout'}
-}
-function hint(){
- if(isComplete())return;
- let hintMsg=null;
- if(!path.length){
-  path.push(idx(curNums[0]));
- }else{
-  // Keep the longest part of the path that can still be finished; drop the cells after it.
-  let k=path.length,sol=null;
-  while(k>0){const s=solveFrom(path.slice(0,k));if(s&&s!=='timeout'){sol=s;break}k--}
-  const dropped=path.length-k;
-  path.length=k;
-  if(k===0)path.push(idx(curNums[0]));
-  else path.push(sol[k]);
-  if(dropped>0)hintMsg='Removed '+dropped+' cell'+(dropped>1?'s':'')+' that could not be finished, and added the next correct cell.';
- }
- hints[puzzle]=(hints[puzzle]||0)+1;
- updateBoard();
- $('feedback').textContent=hintMsg||('Hint: the next cell was added. '+path.length+' of '+N+' cells filled.');
- updateHintCount();renderProgress()
-}
-function updateHintCount(){$('hintCount').textContent=hintTotal()}
 function updateBoard(){
  drawRoute();
  [...$('board').children].forEach((b,i)=>{b.classList.toggle('visited',path.includes(i));b.classList.toggle('next',path[path.length-1]===i)});
@@ -335,8 +295,7 @@ function renderProgress(){
  for(let i=0;i<puzzles.length;i++){
   const d=document.createElement('div');d.className='progress-item'+(done[i]!==undefined?' done':i===puzzle?' current':'');
   const status=done[i]!==undefined?fmt(done[i]):i===puzzle?'In progress':'Not started';
-  const h=hints[i]||0;
-  d.innerHTML='<div class="bubble">'+(i+1)+'</div><div><strong>ZIP '+(i+1)+'</strong><small>'+status+' · Hints: '+h+'</small></div>';
+  d.innerHTML='<div class="bubble">'+(i+1)+'</div><div><strong>ZIP '+(i+1)+'</strong><small>'+status+'</small></div>';
   el.appendChild(d)
  }
 }
@@ -344,12 +303,11 @@ function finishPuzzle(){
  if(!isComplete())return;
  done[puzzle]=Date.now()-startedAt;
  if(puzzle<puzzles.length-1){puzzle++;loadPuzzle()}
- else{tick();clearInterval(timerId);$('finalTime').textContent=fmt(elapsed);$('resultTeam').textContent=team;$('resultHints').textContent=hintTotal();$('headerStatus').textContent='Challenge complete';show('resultScreen')}
+ else{tick();clearInterval(timerId);$('finalTime').textContent=fmt(elapsed);$('resultTeam').textContent=team;$('headerStatus').textContent='Challenge complete';show('resultScreen')}
 }
 $('startBtn').addEventListener('click',begin);
 $('teamName').addEventListener('keydown',e=>{if(e.key==='Enter')begin()});
 $('nextBtn').addEventListener('click',finishPuzzle);
-$('hintBtn').addEventListener('click',hint);
 $('resetPuzzleBtn').addEventListener('click',()=>{path=[];shown=[];slideDir=0;updateBoard();$('feedback').textContent='Puzzle restarted. Start at checkpoint 1.'});
 $('undoBtn').addEventListener('click',()=>{if(path.length){path.pop();updateBoard()}});
 $('quitBtn').addEventListener('click',()=>{if(confirm('End this attempt? The current result will not be saved.')){clearInterval(timerId);show('startScreen');$('headerStatus').textContent='Ready to play';$('timer').textContent='00:00.00'}});
